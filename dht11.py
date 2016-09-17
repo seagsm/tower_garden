@@ -4,7 +4,7 @@
 # Humidity should be monitored at an interval of 3 seconds at least
 # Temperature has no such limitation
 
-import wiringpi2 as GPIO
+import wiringpi as GPIO
 import signal
 
 def initGPIO(pin):
