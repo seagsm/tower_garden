@@ -67,7 +67,7 @@ def getTemp():
 
 def main():
     temp = getTemp();
-    print("Temperature is %f °C" % temp)
+    print("Temperature is %f C degree" % temp)
 
 if __name__ == "__main__":
     main()
