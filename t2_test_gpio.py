@@ -85,8 +85,7 @@ def getTempAndHum(pin):
 def main():
     nGPIO = 0
     [humidity, temperature] = getTempAndHum(nGPIO)
-    print("Hum(%.1f%%）" % (humidity))
-    print("Temp(%.1f°C）" % (temperature))
+
 
 if __name__ == "__main__":
     main()
