@@ -1,8 +1,10 @@
 #!/usr/bin/python
-
+#https://github.com/young-mu/RPi/blob/master/Sensors/dht11.py
 import wiringpi as GPIO
 
-DQ = 0
+
+
+DQ = 4
 IN = 0
 OUT = 1
 H = 1
@@ -11,7 +13,7 @@ PULL_DN = 1
 PULL_UP = 2
 
 def initGPIO():
-    GPIO.wiringPiSetup()
+    GPIO.wiringPiSetupGpio()
     GPIO.pullUpDnControl(DQ, PULL_UP)
 
 def init18b20():
@@ -53,7 +55,7 @@ def readByte():
     return data
 
 def getTemp():
-    initGPIO()
+    #initGPIO()
     init18b20()
     writeByte(0xcc) # skip ROM
     writeByte(0x44) # convert temperature
@@ -66,8 +68,11 @@ def getTemp():
     return temp
 
 def main():
-    temp = getTemp();
-    print("Temperature is %f C degree" % temp)
+    initGPIO()
+    while True:
+        temp = getTemp();
+        print("Temperature is %f C degree" % temp)
+        GPIO.delay(200)
 
 if __name__ == "__main__":
     main()

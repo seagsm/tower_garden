@@ -1,5 +1,5 @@
 #!/usr/bin/python
-
+#https://github.com/young-mu/RPi/blob/master/Sensors/dht11.py
 # Note:
 # Humidity should be monitored at an interval of 3 seconds at least
 # Temperature has no such limitation
