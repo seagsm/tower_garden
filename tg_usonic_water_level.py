@@ -11,21 +11,28 @@ import wiringpi as GPIO
 TG_USONIC_WATER_LEVEL_INIT_FILE = "gpio.ini"
 # time out in seconds
 MEASUREMENT_TIMEOUT = 1
-
+# Strob pulse width in sec
+STROB_WIDTH = 0.00001
+# Sound speed sm/sec
+SOUND_SPEED = 34000
+HALF_OF_SOUND_SPEED = SOUND_SPEED/2
+# Default values for GPIO pins
 gpio_output_strob = 24
 gpio_input_strob  = 23
+
+
 time_stamp = 0
 distance_time = 0
-
-
 time_flag = 0
 
 
+# Measurement time differences by interrupt:
 def echo_callback():
     global time_flag
     global time_stamp
     global distance_time
 
+    # If measurement start flag is TRUE, it do measurement.
     if time_flag == 1:
         if (GPIO.digitalRead(gpio_input_strob)) == 1:
             time_stamp = time.time()
@@ -36,22 +43,27 @@ def echo_callback():
             distance_time = -1
 
 
+# Function init GPIO pins
 def init_gpio():
+    # Init GPIO subsystem:
     GPIO.wiringPiSetupGpio()
     # Set input pin property:
     GPIO.pinMode(gpio_input_strob, GPIO.GPIO.INPUT)
+    # Set input pin PullUp control:
     GPIO.pullUpDnControl(gpio_input_strob, GPIO.GPIO.PUD_UP)
-    # Set input pin callback
+    # Set input pin interrupt callback function:
     GPIO.wiringPiISR(gpio_input_strob, GPIO.GPIO.INT_EDGE_BOTH, echo_callback)
     # Set output pin property:
     GPIO.pinMode(gpio_output_strob, GPIO.GPIO.OUTPUT)
     GPIO.digitalWrite(gpio_output_strob, GPIO.GPIO.LOW)
 
 
-# Function init global variable from init files, it should be called in start sequence:
+# Function init global variable from init files and call GPIO init.
+# It should be called in start sequence:
 def init_module():
     global gpio_output_strob
     global gpio_input_strob
+
     # Read init file:
     conf = ConfigParser.RawConfigParser()
     conf.read(TG_USONIC_WATER_LEVEL_INIT_FILE)
@@ -70,15 +82,22 @@ def print_pin_numbers():
     print gpio_input_strob
 
 
+# Function generate onetime pulse
+def send_strobe(strob_time):
+    GPIO.digitalWrite(gpio_output_strob, GPIO.GPIO.HIGH)
+    time.sleep(strob_time)
+    GPIO.digitalWrite(gpio_output_strob, GPIO.GPIO.LOW)
+
+
+# Function start measurement sequence and check timeout:
 def get_raw_distance():
     global time_flag
     global distance_time
-    # Start measurement process
+    # Set start measurement process flag
     time_flag = 1
-    # Send trigger strobe
-    GPIO.digitalWrite(gpio_output_strob, GPIO.GPIO.HIGH)
-    time.sleep(0.00001)
-    GPIO.digitalWrite(gpio_output_strob, GPIO.GPIO.LOW)
+    # Send trigger strobe:
+    send_strobe(STROB_WIDTH)
+    # Init timeout start time:
     start_time = time.time()
     while True:
         delta = time.time() - start_time
@@ -89,7 +108,7 @@ def get_raw_distance():
         if time_flag == 0 :
             break
 
-    raw_distance = distance_time * 17000
+    raw_distance = distance_time * HALF_OF_SOUND_SPEED
     return raw_distance
 
 

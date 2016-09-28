@@ -8,8 +8,12 @@
 import time
 import socket
 import tg_temperature as temp_sensor
+import tg_usonic_water_level as water_level
 
+# init temperature module
 temp_sensor.init_temperature_module()
+# init water level module
+water_level.init_module()
 
 sock = socket.socket()
 sock.bind(('', 9090))
@@ -30,6 +34,8 @@ while True:
             data_send_back = str(temp_sensor.read_temperature(0))
         elif data == 'get temp 2':
             data_send_back = str(temp_sensor.read_temperature(0))
+        elif data == 'get water level':
+            data_send_back = str(water_level.get_raw_distance())
         else:
             data_send_back = str(-300) # recognized like error
         conn.send(data_send_back)
