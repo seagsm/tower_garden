@@ -111,7 +111,7 @@ def get_raw_distance():
     raw_distance = distance_time * HALF_OF_SOUND_SPEED
     return raw_distance
 
-
+# just for test
 def main():
     print_pin_numbers()
     init_module()
