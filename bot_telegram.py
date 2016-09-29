@@ -33,15 +33,14 @@ def handle(msg):
         #GPIO.output(11,0)
         #GPIO.cleanup()
         bot.sendMessage(chat_id,str('Okey Off!'))
-
+    elif command == '/start':
+        bot.sendMessage(chat_id, str('Hi! I am TowerGarden number 1 !\n You can use commands:\n /temp - show temperature \n /level - show water level \n /image - show webcamera image \n'))
     elif command == '/temp':
         bot.sendMessage(chat_id,'temp: '+ str(temp_sensor.read_temperature(0))+' C')
     elif command == '/level':
         bot.sendMessage(chat_id,'water level is : '+ str(water_level.get_raw_distance_blocked())+' %')
     elif command == '/time':
         bot.sendMessage(chat_id,'time now: ' + str(datetime.datetime.now()))
-    elif command == '/start':
-        bot.sendMessage(chat_id, str('Hi! I am TowerGarden number 1 !'))
     elif command == '/image':
         image_file = open('/home/pi/test/video0.jpg', 'rb')
         bot.sendPhoto(chat_id,image_file,str(datetime.datetime.now()))
