@@ -12,7 +12,7 @@ TG_USONIC_WATER_LEVEL_INIT_FILE = "tg_gpio.ini"
 # time out in seconds
 MEASUREMENT_TIMEOUT = 1
 # time out in relative ticks
-BLOCKED_MEASUREMENT_TIMEOUT = 1000000
+BLOCKED_MEASUREMENT_TIMEOUT = 100000
 # Strob pulse width in sec
 STROB_WIDTH = 0.00001
 # Sound speed sm/sec
@@ -136,6 +136,8 @@ def get_raw_distance():
     raw_distance = distance_time * HALF_OF_SOUND_SPEED
     return raw_distance
 
+
+# Function start measurement sequence and check timeout , blocking with timeout:
 def get_raw_distance_blocked():
     # Send trigger strobe:
     send_strobe(STROB_WIDTH)
@@ -143,22 +145,24 @@ def get_raw_distance_blocked():
     raw_distance = -1
     delta = 0
     while True:
-        if (GPIO.digitalRead(gpio_input_strob) != 1):
+        if GPIO.digitalRead(gpio_input_strob) == 0:
             delta = delta + 1
             if delta > BLOCKED_MEASUREMENT_TIMEOUT:
                 raw_distance = -2
-            break
+                break
         else:
+
+            #print delta
             break
-    if(raw_distance == -1):
+    if raw_distance == -1:
         delta = 0
         start_time = time.time()
         while True:
-            if (GPIO.digitalRead(gpio_input_strob) != 0):
+            if (GPIO.digitalRead(gpio_input_strob) == 1):
                 delta = delta + 1
                 if delta > BLOCKED_MEASUREMENT_TIMEOUT:
                     raw_distance = -3
-                break
+                    break
             else:
                 raw_distance = time.time() - start_time
                 break
@@ -179,7 +183,7 @@ def main():
     while True:
         t = get_raw_distance_blocked()
         print("Raw distance is %f " % t)
-        time.sleep(0.2)
+        time.sleep(0.8)
 
 
 if __name__ == "__main__":
