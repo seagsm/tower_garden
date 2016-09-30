@@ -12,6 +12,8 @@ from subprocess import call
 
 temperature = 0
 humidity = 0
+hum_timestamp = 0
+hum_start_time = time.time()
 
 
 BOT_TOKEN = '254303577:AAFoYwuNJ4Txx6YnnRQO40dRaTbtx_RF4iQ'
@@ -21,11 +23,17 @@ my_chat_id = 234288444
 def call_hum_sensor():
     global temperature
     global humidity
+    global hum_timestamp
+    global hum_timestamp
+    global hum_start_time
+
     # 11 is DHT11 , 22 is DHT22
     sensor = 11
     # GPIO 22 (connector pin 15)
     pin = 22
     humidity, temperature = Adafruit_DHT.read_retry(sensor, pin)
+    hum_timestamp = time.time() - hum_start_time
+    hum_start_time = time.time()
 
 
 # https://nattster.wordpress.com/2013/06/05/catch-kill-signal-in-python/
@@ -36,6 +44,7 @@ def signal_term_handler(signal, frame):
 
 
 def handle(msg):
+    global hum_timestamp
     chat_id = msg['from']['id']
     print chat_id
     command = msg['text']
@@ -51,6 +60,7 @@ def handle(msg):
         #GPIO.output(11,0)
         #GPIO.cleanup()
         bot.sendMessage(chat_id,str('Okey Off!'))
+
     elif command == '/start':
         bot.sendMessage(chat_id, str('Hi! I am TowerGarden number 1 !\n You can use commands:\n /temp - show temperature \n /level - show water level \n /image - show webcamera image \n'))
     elif command == '/temp':
@@ -60,15 +70,11 @@ def handle(msg):
     elif command == '/time':
         bot.sendMessage(chat_id,'time now: ' + str(datetime.datetime.now()))
     elif command == '/hum':
-        # 11 is DHT11 , 22 is DHT22
-        # sensor = 11
-        # GPIO 22 (connector pin 15)
-        # pin = 22
-        # humidity, temperature = Adafruit_DHT.read_retry(sensor, pin)
-        bot.sendMessage(chat_id,'humidity now : ' + str(humidity) + '\n' + 'temperature now : ' + str(temperature))
+        bot.sendMessage(chat_id,'humidity now : ' + str(humidity) + '\n' + 'temperature now : ' + str(temperature) + '\n' + 'temperature now : ' + str(hum_timestamp))
+        hum_timestamp = -1
     elif command == '/image':
-
-        image_file = open('/home/pi/test/video0.jpg', 'rb')
+        call(["fswebcam", "-r", "1280x720","--no-timestamp","--no-banner" , "/home/pi/test/current.jpg"])
+        image_file = open('/home/pi/test/current.jpg', 'rb')
         bot.sendPhoto(chat_id,image_file,str(datetime.datetime.now()))
         image_file.close()
 
@@ -91,8 +97,6 @@ try:
         # print "Bot started..."
         call_hum_sensor()
         time.sleep(4)
-
-
 # catch "Ctrl^C" signal
 except KeyboardInterrupt:
     print "Good bye"
