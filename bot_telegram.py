@@ -2,13 +2,31 @@ import time
 import datetime
 import signal
 import sys
-import telepot
 import tg_temperature as temp_sensor
 import tg_usonic_water_level as water_level
+import Adafruit_DHT
+import telepot
+from subprocess import call
+
+#from test_and_try import callback
+
+temperature = 0
+humidity = 0
+
 
 BOT_TOKEN = '254303577:AAFoYwuNJ4Txx6YnnRQO40dRaTbtx_RF4iQ'
-
 my_chat_id = 234288444
+
+
+def call_hum_sensor():
+    global temperature
+    global humidity
+    # 11 is DHT11 , 22 is DHT22
+    sensor = 11
+    # GPIO 22 (connector pin 15)
+    pin = 22
+    humidity, temperature = Adafruit_DHT.read_retry(sensor, pin)
+
 
 # https://nattster.wordpress.com/2013/06/05/catch-kill-signal-in-python/
 def signal_term_handler(signal, frame):
@@ -41,7 +59,15 @@ def handle(msg):
         bot.sendMessage(chat_id,'water level is : '+ str(water_level.get_raw_distance_blocked())+' %')
     elif command == '/time':
         bot.sendMessage(chat_id,'time now: ' + str(datetime.datetime.now()))
+    elif command == '/hum':
+        # 11 is DHT11 , 22 is DHT22
+        # sensor = 11
+        # GPIO 22 (connector pin 15)
+        # pin = 22
+        # humidity, temperature = Adafruit_DHT.read_retry(sensor, pin)
+        bot.sendMessage(chat_id,'humidity now : ' + str(humidity) + '\n' + 'temperature now : ' + str(temperature))
     elif command == '/image':
+
         image_file = open('/home/pi/test/video0.jpg', 'rb')
         bot.sendPhoto(chat_id,image_file,str(datetime.datetime.now()))
         image_file.close()
@@ -63,7 +89,9 @@ bot.sendMessage(my_chat_id,'temp: '+ str(temp_sensor.read_temperature(0))+' C')
 try:
     while True:
         # print "Bot started..."
-        time.sleep(3)
+        call_hum_sensor()
+        time.sleep(4)
+
 
 # catch "Ctrl^C" signal
 except KeyboardInterrupt:
