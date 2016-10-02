@@ -10,6 +10,7 @@ import telepot
 from subprocess import call
 
 #from test_and_try import callback
+#from modules import callback
 
 temperature = 0
 humidity = 0
