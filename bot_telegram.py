@@ -96,6 +96,7 @@ def handle(msg):
     except KeyboardInterrupt:
         print "Good bye handler"
 
+
 # setup signal handler
 signal.signal(signal.SIGTERM, signal_term_handler)
 # init humidity sensors module:
