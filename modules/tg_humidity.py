@@ -4,7 +4,6 @@
 
 # import libraries
 import time
-import subprocess
 import ConfigParser
 import Adafruit_DHT
 
