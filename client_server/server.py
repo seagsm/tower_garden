@@ -5,10 +5,9 @@
 # To disconnect it from terminal. In this case all print messages will be ignored. > dev/null
 # To see print messages start it without nohup.
 
-import time
 import socket
-import tg_temperature as temp_sensor
-import tg_usonic_water_level as water_level
+from tower_garden.modules import tg_temperature as temp_sensor
+from tower_garden.modules import tg_usonic_water_level as water_level
 
 # init temperature module
 temp_sensor.init_temperature_module()

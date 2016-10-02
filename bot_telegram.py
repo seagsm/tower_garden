@@ -2,9 +2,9 @@ import time
 import datetime
 import signal
 import sys
-import tg_temperature as temp_sensor
-import tg_usonic_water_level as water_level
-import tg_humidity as hum_sensor
+from modules import tg_temperature as temp_sensor
+from modules import tg_usonic_water_level as water_level
+from modules import tg_humidity as hum_sensor
 import Adafruit_DHT
 import telepot
 from subprocess import call
