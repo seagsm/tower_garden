@@ -5,9 +5,9 @@
 # To disconnect it from terminal. In this case all print messages will be ignored. > dev/null
 # To see print messages start it without nohup.
 
-import socket
-from tower_garden.modules import tg_temperature as temp_sensor
-from tower_garden.modules import tg_usonic_water_level as water_level
+import socket, time
+from modules import tg_temperature as temp_sensor
+from modules import tg_usonic_water_level as water_level
 
 # init temperature module
 temp_sensor.init_temperature_module()
@@ -15,6 +15,7 @@ temp_sensor.init_temperature_module()
 water_level.init_module()
 
 sock = socket.socket()
+sock.setblocking(False)
 sock.bind(('', 9090))
 
 while True:
@@ -27,16 +28,20 @@ while True:
         print data
         if not data:
             break
-        if data == 'get temp 0':
-            data_send_back = str(temp_sensor.read_temperature(0))
-        elif data == 'get temp 1':
-            data_send_back = str(temp_sensor.read_temperature(0))
-        elif data == 'get temp 2':
-            data_send_back = str(temp_sensor.read_temperature(0))
-        elif data == 'get water level':
-            data_send_back = str(water_level.get_raw_distance())
         else:
-            data_send_back = str(-300) # recognized like error
-        conn.send(data_send_back)
+            if data == 'get temp 0':
+                data_send_back = str(temp_sensor.read_temperature(0))
+            elif data == 'get temp 1':
+                data_send_back = str(temp_sensor.read_temperature(0))
+            elif data == 'get temp 2':
+                data_send_back = str(temp_sensor.read_temperature(0))
+            elif data == 'get water level':
+                data_send_back = str(water_level.get_raw_distance())
+            else:
+                data_send_back = str(-300) # recognized like error
+            conn.send(data_send_back)
+        print "pass idle ... "
+
+        time.sleep(1)
 
     conn.close()

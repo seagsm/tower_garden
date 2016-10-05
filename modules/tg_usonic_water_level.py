@@ -146,28 +146,26 @@ def get_raw_distance_blocked():
     delta = 0
     while True:
         if GPIO.digitalRead(gpio_input_strob) == 0:
-            delta = delta + 1
+            delta += 1
             if delta > BLOCKED_MEASUREMENT_TIMEOUT:
                 raw_distance = -2
                 break
         else:
-
-            #print delta
+            # print delta
             break
     if raw_distance == -1:
         delta = 0
         start_time = time.time()
         while True:
-            if (GPIO.digitalRead(gpio_input_strob) == 1):
-                delta = delta + 1
+            if GPIO.digitalRead(gpio_input_strob) == 1:
+                delta += 1
                 if delta > BLOCKED_MEASUREMENT_TIMEOUT:
                     raw_distance = -3
                     break
             else:
                 raw_distance = time.time() - start_time
                 break
-
-    raw_distance = raw_distance * HALF_OF_SOUND_SPEED
+    raw_distance *= HALF_OF_SOUND_SPEED
     return raw_distance
 
 
