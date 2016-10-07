@@ -63,9 +63,9 @@ def handle(msg):
         print chat_id
         command = msg['text']
         if command == '/on':
-            #GPIO.setmode(GPIO.BOARD)
-            #GPIO.setup(11, GPIO.OUT)
-            #GPIO.output(11,1)
+            # GPIO.setmode(GPIO.BOARD)
+            # GPIO.setup(11, GPIO.OUT)
+            # GPIO.output(11,1)
             bot.sendMessage(chat_id,str('Okey On!'))
 
         elif command == '/off':

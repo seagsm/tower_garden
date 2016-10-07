@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 #coding:utf-8
-# OS 1-wire interface connected to GPIO4(connector pin 7)
 
 # import libraries
 import time
