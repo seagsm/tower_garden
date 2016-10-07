@@ -19,10 +19,10 @@ def call_device_get_command(tower_object, get_request):
         data = str(tower_object.temperature['inside'])
     elif b'temp 1' in requests[fileno]:
         data = str(tower_object.temperature['outside'])
-    elif b'water level' in requests[fileno]:
-        data = str(tower_object.water_level_raw)
     elif b'hum 0' in requests[fileno]:
         data = 'hum: '+ str(tower_object.humidity[0]['inside']) + ' temp :' + str(tower_object.humidity[1]['inside'])
+    elif b'water level' in requests[fileno]:
+        data = str(tower_object.water_level_sensor.water_level_raw)
     else:
         data = str(-300)  # recognized like error
     return data
@@ -56,8 +56,8 @@ hum_sensor.init_humidity_module()
 # init temperature module
 temp_sensor.init_temperature_module()
 # init water level module
-water_level.init_module()
-
+#water_level.init_module()
+water_level.init_module_blocked()
 my_tower = tg_device.TgDevice('MyTower')
 
 
@@ -83,8 +83,7 @@ try:
     while True:
         # Each 'call_period' sec read device state
         call_device_control(my_tower, CALL_DEVICE_PERIOD)
-
-
+        # 0.1 is poll period in sec.
         events = epoll.poll(0.1)
         for fileno, event in events:
             if fileno == sock.fileno():
@@ -103,7 +102,11 @@ try:
                     epoll.modify(fileno, select.EPOLLOUT)
                     print(requests[fileno].decode()[:-2] + '\n')
                     # read and write device state in depend on command string:
-                    responses[connection.fileno()] = call_device_command(my_tower, requests[fileno])
+                    try:
+                        responses[connection.fileno()] = call_device_command(my_tower, requests[fileno])
+                    except Exception:
+                        print Exception
+                        print '---------------------------------------------'
 
             # Send response:
             elif event & select.EPOLLOUT:

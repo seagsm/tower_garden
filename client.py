@@ -26,7 +26,8 @@ while True:
     sock.send('get water level\n\n')
     data = sock.recv(1024)
     sock.close()
-    print float(data)
-    #print data
+    #print float(data)
+
+    print data
     time.sleep(2)
 

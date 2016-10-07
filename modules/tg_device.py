@@ -25,7 +25,9 @@ class TgDevice():
 
     light_main = 0
     light_night = 0
+
     water_sensor_state = 0
+    water_level_sensor = 0
     water_level_min = 0
     water_level_max = 30
     water_level_percent = 0
@@ -46,6 +48,7 @@ class TgDevice():
         self.pump['emergency'] = tg_pump.TgPump('emergency')
         self.pump['main'].init_pump(10, 2)
         self.pump['emergency'].init_pump(10, 2)
+        self.water_level_sensor = water_level.TgWaterLevelSensor('main_water_tank')
 
     # Get temperature:
     def get_temperature(self, place):
@@ -59,10 +62,11 @@ class TgDevice():
         self.hum_start_time = time.time()
 
     def get_water_level(self):
-        self.water_level_raw = water_level.get_raw_distance()
-        if self.water_level_raw >= 0:
+        water_level.get_raw_distance_blocked(self.water_level_sensor)
+        if self.water_level_sensor.water_level_raw >= 0:
             # calc value in percents:
-            self.water_level_percent = self.water_level_raw/((self.water_level_max - self.water_level_min)/100.0)
+            percent = (self.water_level_sensor.water_level_max - self.water_level_sensor.water_level_min)/100.0
+            self.water_level_sensor.water_level_percent = self.water_level_sensor.water_level_raw/percent
         else:
             # return error value:
             self.water_level_percent = -300
