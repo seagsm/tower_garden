@@ -11,6 +11,26 @@ from modules import tg_usonic_water_level as water_level
 from modules import tg_humidity as hum_sensor
 
 
+
+
+CALL_DEVICE_PERIOD = 5
+
+
+class DevicePumps():
+    pump_name = ''
+    pump_time_stamp = 0
+    pump_period_time = 0
+    pump_duty_time = 0
+
+    def __init__(self, name):
+        self.pump_name = name
+        self.pump_time_stamp = time.time()
+
+    def init_pump(self,period, duty):
+        self.pump_period_time = period
+        self.pump_duty_time = duty
+
+
 class TowerDevice():
     current_device_name = ''
     # list of temp sensor
@@ -24,6 +44,14 @@ class TowerDevice():
 
     # list of pump state
     pump = {'main': 0, 'emergency': 0}
+    pumps_run_flag  = 1
+#    pump_time_stamp = 0
+#    main_pump_period_time = 0
+#    main_pump_duty_time = 0
+#    emergency_pump_period_time = 0
+#    emergency_pump_duty_time = 0
+
+
     light_main = 0
     light_night = 0
     water_sensor_state = 0
@@ -43,6 +71,10 @@ class TowerDevice():
         self.current_device_name = name
         self.hum_start_time = time.time()
         self.last_call_time_stamp = time.time()
+        self.pump['main'] = DevicePumps('main')
+        self.pump['main'].init_pump(10, 2)
+        self.pump['emergency'] = DevicePumps('emergency')
+        self.pump['emergency'].init_pump(10, 2)
 
     # Get temperature:
     def get_temperature(self, place):
@@ -65,6 +97,33 @@ class TowerDevice():
             self.water_level_percent = -300
         return self.water_level_percent
 
+    def pump_controller(self,name):
+        if self.pumps_run_flag == 1:
+            time_delta = time.time() - self.pump[name].pump_time_stamp
+            if time_delta < self.pump[name].pump_duty_time:
+                # pump ON
+                print (self.pump[name].pump_name + ' ON')
+            # elif time_delta >= self.main_pump_duty_time and time_delta < self.main_pump_period_time:
+            elif self.pump[name].pump_duty_time <= time_delta < self.pump[name].pump_period_time:
+                # pump OFF
+                print (self.pump[name].pump_name + ' OFF')
+            else:
+                self.pump[name].pump_time_stamp = time.time()
+
+    def init_pump_controller(self,pump_name,period,duty):
+        if pump_name == 'main':
+            self.main_pump_period_time = period
+            self.main_pump_duty_time = duty
+        elif pump_name == 'emergency':
+            self.emergency_pump_period_time = period
+            self.emergency_pump_duty_time = duty
+
+
+
+
+
+
+
 
 def call_device_get_command(tower_object, get_request):
     if b'temp 0' in get_request:
@@ -73,6 +132,8 @@ def call_device_get_command(tower_object, get_request):
         data = str(tower_object.temperature['outside'])
     elif b'water level' in requests[fileno]:
         data = str(tower_object.water_level_raw)
+    elif b'hum 0' in requests[fileno]:
+        data = 'hum: '+ str(tower_object.humidity[0]['inside']) + ' temp :' + str(tower_object.humidity[1]['inside'])
     else:
         data = str(-300)  # recognized like error
     return data
@@ -86,14 +147,19 @@ def call_device_command(tower_object, request_command):
     return data
 
 
-def call_device_control(tower_object,call_period):
+def call_device_control(tower_object, call_period):
     time_diff = time.time() - tower_object.last_call_time_stamp
     print time_diff
+
+    tower_object.pump_controller('main')
+
     if time_diff > call_period:
         tower_object.get_humidity('inside')
         tower_object.get_temperature('inside')
         tower_object.get_water_level()
         tower_object.last_call_time_stamp =time.time()
+
+
 
 
 # init humidity sensors module:
@@ -127,11 +193,10 @@ try:
     connections = {}; requests = {}; responses = {}
     while True:
         # Each 'call_period' sec read device state
-        call_period = 5
-        call_device_control(my_tower, call_period)
+        call_device_control(my_tower, CALL_DEVICE_PERIOD)
 
 
-        events = epoll.poll(1)
+        events = epoll.poll(0.1)
         for fileno, event in events:
             if fileno == sock.fileno():
                 connection, address = sock.accept()
@@ -143,18 +208,13 @@ try:
             # new data in socket
             elif event & select.EPOLLIN:
                 requests[fileno] += connections[fileno].recv(1024)
+                print requests[fileno]
+
                 if EOL1 in requests[fileno] or EOL2 in requests[fileno]:
                     epoll.modify(fileno, select.EPOLLOUT)
-                    #print('-'*40 + '\n' + requests[fileno].decode()[:-2])
                     print(requests[fileno].decode()[:-2] + '\n')
-
-                    #responses[connection.fileno()] = call_command(requests[fileno])
-
+                    # read and write device state in depend on command string:
                     responses[connection.fileno()] = call_device_command(my_tower, requests[fileno])
-
-
-
-
 
             # Send response:
             elif event & select.EPOLLOUT:

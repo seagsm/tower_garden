@@ -18,6 +18,7 @@ hum_start_time = time.time()
 
 BOT_TOKEN = '254303577:AAFoYwuNJ4Txx6YnnRQO40dRaTbtx_RF4iQ'
 my_chat_id = 234288444
+# Tolik Pauk 256771010
 
 
 def call_hum_sensor(sensor_num):
