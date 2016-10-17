@@ -9,7 +9,6 @@ import socket, select, time
 from modules import tg_temperature as temp_sensor
 from modules import tg_usonic_water_level as water_level
 from modules import tg_humidity as hum_sensor
-from modules import tg_pump
 from modules import tg_device
 
 CALL_DEVICE_PERIOD = 5
@@ -58,9 +57,8 @@ temp_sensor.init_temperature_module()
 # init water level module
 #water_level.init_module()
 water_level.init_module_blocked()
+
 my_tower = tg_device.TgDevice('MyTower')
-
-
 
 EOL1 = b'\n\n'
 EOL2 = b'\n\r\n'

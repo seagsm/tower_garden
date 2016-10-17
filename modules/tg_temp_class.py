@@ -14,7 +14,7 @@ import ConfigParser
 # with open("tg_temperature.ini", "w") as config:
 # conf.write(config)
 
-TG_TEMPERATURE_INIT_FILE = "tg_temperature.ini"
+TG_TEMPERATURE_INIT_FILE = "/home/pi/projects/python/tower_garden/tg_temperature.ini"
 
 inside_tube_air_temperature_sensor_id = ''
 outside_tube_air_temperature_sensor_id = ''
@@ -145,16 +145,20 @@ def o_read_temperature(sensor_number):
 def main():
     init_temperature_module()
     print get_temperature_sensor_id(0)
-    print get_temperature_sensor_id(1)
-    print get_temperature_sensor_id(2)
-    print get_temperature_sensor_id(3)
+#    print get_temperature_sensor_id(1)
+#    print get_temperature_sensor_id(2)
+#    print get_temperature_sensor_id(3)
 
     while True:
-        t = o_read_temperature(0)
-        print("Temperature is %f C degree" % t)
-        time.sleep(0.01)
-        TempSensor.sensor_id = 0
-        a = TempSensor('10-000803055832')
+        # t = o_read_temperature(0)
+        # print("Temperature is %f C degree" % t)
+        time.sleep(0.5)
+        # TempSensor.sensor_id = 0
+        # a = TempSensor('10-000803055832')
+        a = TempSensor('28-0316802e8cff')
+        print("Temperature is %f C degree" %a.read_temperature() )
+
+
 
 if __name__ == "__main__":
     main()

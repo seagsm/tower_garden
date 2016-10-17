@@ -19,8 +19,9 @@ class TgDevice():
     # hum[1][place] - temperature
     humidity = [{'inside': 0, 'outside': 0},{'inside': 0, 'outside': 0}]
 
-    # list of pump state
+    # Create list of pump
     pump = {'main': 0, 'emergency': 0}
+    # On/Off pumps controller
     pumps_run_flag  = 1
 
     light_main = 0
@@ -28,26 +29,24 @@ class TgDevice():
 
     water_sensor_state = 0
     water_level_sensor = 0
-    water_level_min = 0
-    water_level_max = 30
-    water_level_percent = 0
-    water_level_raw = 0
+#    water_level_min = 0
+#    water_level_max = 30
+#    water_level_percent = 0
+#    water_level_raw = 0
     pir_sensor_state = 0
-
-    hum_start_time = 0
-    hum_timestamp = 0
 
     last_call_time_stamp = 0
 
-
     def __init__(self, name):
         self.current_device_name = name
-        self.hum_start_time = time.time()
         self.last_call_time_stamp = time.time()
+        # Create pumps objects:
         self.pump['main'] = tg_pump.TgPump('main')
         self.pump['emergency'] = tg_pump.TgPump('emergency')
+        # Init pumps parameters:
         self.pump['main'].init_pump(10, 2)
         self.pump['emergency'].init_pump(10, 2)
+        # Create water_level_sensor object:
         self.water_level_sensor = water_level.TgWaterLevelSensor('main_water_tank')
 
     # Get temperature:
@@ -58,8 +57,6 @@ class TgDevice():
     # Get humidity and temperature:
     def get_humidity(self, place):
         self.humidity[0][place],self.humidity[1][place] = hum_sensor.get_humidity_from_sensor(self.places[place])
-        self.hum_timestamp = time.time() - self.hum_start_time
-        self.hum_start_time = time.time()
 
     def get_water_level(self):
         water_level.get_raw_distance_blocked(self.water_level_sensor)

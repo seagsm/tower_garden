@@ -18,7 +18,7 @@ class TgWaterLevelSensor():
 
 
 
-TG_USONIC_WATER_LEVEL_INIT_FILE = "tg_gpio.ini"
+TG_USONIC_WATER_LEVEL_INIT_FILE = "/home/pi/projects/python/tower_garden/tg_gpio.ini"
 # time out in seconds
 MEASUREMENT_TIMEOUT = 0.1
 # time out in relative ticks

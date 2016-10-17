@@ -14,7 +14,7 @@ import ConfigParser
 # with open("tg_temperature.ini", "w") as config:
 # conf.write(config)
 
-TG_TEMPERATURE_INIT_FILE = "tg_temperature.ini"
+TG_TEMPERATURE_INIT_FILE = "/home/pi/projects/python/tower_garden/tg_temperature.ini"
 
 inside_tube_air_temperature_sensor_id = ''
 outside_tube_air_temperature_sensor_id = ''

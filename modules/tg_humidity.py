@@ -14,7 +14,7 @@ import Adafruit_DHT
 # with open("tg_temperature.ini", "w") as config:
 # conf.write(config)
 
-TG_HUMIDITY_SENSOR_INIT_FILE = "tg_gpio.ini"
+TG_HUMIDITY_SENSOR_INIT_FILE = "/home/pi/projects/python/tower_garden/tg_gpio.ini"
 
 
 type_of_hum_sensor = [-1,-1,-1,-1]
@@ -80,7 +80,7 @@ def main():
         hum,temp = get_humidity_from_sensor(0)
         print(" Humidity is {:.1f} percents".format(hum))
         print(" Temperature is {:.1f} C degree".format(temp))
-        time.sleep(5)
+        time.sleep(3)
 
 if __name__ == "__main__":
     main()

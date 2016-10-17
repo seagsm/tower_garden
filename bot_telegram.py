@@ -2,19 +2,20 @@ import time
 import datetime
 import signal
 import sys
+import wiringpi as GPIO
 from modules import tg_temperature as temp_sensor
 from modules import tg_usonic_water_level as water_level
 from modules import tg_humidity as hum_sensor
+from modules import tg_pump
 import Adafruit_DHT
 import telepot
-from subprocess import call
+import subprocess
 
 
 temperature = 0
 humidity = 0
 hum_timestamp = 0
 hum_start_time = time.time()
-
 
 BOT_TOKEN = '254303577:AAFoYwuNJ4Txx6YnnRQO40dRaTbtx_RF4iQ'
 my_chat_id = 234288444
@@ -27,9 +28,14 @@ def call_hum_sensor(sensor_num):
     global hum_timestamp
     global hum_timestamp
     global hum_start_time
-    humidity, temperature = hum_sensor.get_humidity_from_sensor(sensor_num)
+
     hum_timestamp = time.time() - hum_start_time
-    hum_start_time = time.time()
+    if hum_timestamp > 4:
+        humidity, temperature = hum_sensor.get_humidity_from_sensor(sensor_num)
+        hum_start_time = time.time()
+
+
+
 
 
 def call_hum_sensor_raw():
@@ -62,23 +68,36 @@ def handle(msg):
         chat_id = msg['from']['id']
         print chat_id
         command = msg['text']
-        if command == '/on':
-            # GPIO.setmode(GPIO.BOARD)
-            # GPIO.setup(11, GPIO.OUT)
-            # GPIO.output(11,1)
-            bot.sendMessage(chat_id,str('Okey On!'))
+        if command == '/lon':
+            GPIO.digitalWrite(26, GPIO.GPIO.HIGH)
+            bot.sendMessage(chat_id,str('Light On!'))
+        elif command == '/loff':
+            GPIO.digitalWrite(26, GPIO.GPIO.LOW)
+            bot.sendMessage(chat_id,str('Light Off!'))
 
-        elif command == '/off':
-            #GPIO.setmode(GPIO.BOARD)
-            #GPIO.setup(11, GPIO.OUT)
-            #GPIO.output(11,0)
-            #GPIO.cleanup()
-            bot.sendMessage(chat_id,str('Okey Off!'))
+        elif command == '/pon':
+            GPIO.digitalWrite(21, GPIO.GPIO.HIGH)
+            bot.sendMessage(chat_id,str('Pump On!'))
+        elif command == '/poff':
+            GPIO.digitalWrite(21, GPIO.GPIO.LOW)
+            bot.sendMessage(chat_id,str('Pump Off!'))
+
+        elif command == '/son':
+            # GPIO.digitalWrite(21, GPIO.GPIO.HIGH)
+            bot.sendMessage(chat_id,str('Security On!'))
+        elif command == '/soff':
+            # GPIO.digitalWrite(21, GPIO.GPIO.LOW)
+            bot.sendMessage(chat_id,str('Security Off!'))
+
+        elif command == '/reboot':
+            subprocess.call(['sudo', 'reboot'])
+        elif command == '/poweroff':
+            subprocess.call(['sudo', 'poweroff'])
 
         elif command == '/start':
-            bot.sendMessage(chat_id, str('Hi! I am TowerGarden number 1 !\n You can use commands:\n /temp - show temperature \n /level - show water level \n /image - show webcamera image \n/hum - show humidity'))
+            bot.sendMessage(chat_id, str('Hi! I am TowerGarden number 1 !\n You can use commands:\n /temp - show temperature \n /lon - light on \n /loff - light off \n /pon - pump on \n /poff - pump off /son - security on \n /soff - security off \n  /image - show webcamera image \n/hum - show humidity'))
         elif command == '/help':
-            bot.sendMessage(chat_id, str('You can use commands:\n /temp - show temperature \n /level - show water level \n /image - show webcamera image \n/hum - show humidity'))
+            bot.sendMessage(chat_id, str('You can use commands:\n /temp - show temperature \n /lon - light on \n /loff - light off \n /pon - pump on \n /poff - pump off /son - security on \n /soff - security off \n /image - show webcamera image \n/hum - show humidity'))
         elif command == '/temp':
             bot.sendMessage(chat_id, 'temp: {:.1f} C'.format(temp_sensor.read_temperature(0)))
         elif command == '/level':
@@ -90,10 +109,32 @@ def handle(msg):
             hum_timestamp = -1
         elif command == '/image':
             # Catch image from webcamera:
-            call(["fswebcam", "-r", "1600x1000","--no-timestamp","--no-banner" , "/home/pi/test/current.jpg"])
+            subprocess.call(["fswebcam", "-r", "1600x1000","--no-timestamp","--no-banner" , "/home/pi/test/current.jpg"])
             image_file = open('/home/pi/test/current.jpg', 'rb')
             bot.sendPhoto(chat_id,image_file,str(datetime.datetime.now()))
             image_file.close()
+        elif command.split(' ')[0] == '/pumpp':
+            try:
+                if int(command.split(' ')[1]) > 30:
+                    pump.pump_period_time = int(command.split(' ')[1])
+                    bot.sendMessage(chat_id, 'Period time is: ' + str(pump.pump_period_time))
+            except:
+                bot.sendMessage(chat_id, 'Something wrong!')
+        elif command.split(' ')[0] == '/pumpd':
+            try:
+                if 10 < int(command.split(' ')[1]) < pump.pump_period_time:
+                    pump.pump_duty_time = int(command.split(' ')[1])
+                    bot.sendMessage(chat_id, 'Duty time is: ' + str(pump.pump_duty_time))
+            except:
+                bot.sendMessage(chat_id, 'Something wrong!')
+        elif command == '/param':
+            bot.sendMessage(chat_id, 'Period time is: ' + str(pump.pump_period_time)+ '\nDuty time is: ' + str(pump.pump_duty_time))
+        elif command == '/pump_start':
+            pump.pump_run_flag = 1
+            bot.sendMessage(chat_id, 'Period state is: ' + str(pump.pump_run_flag))
+        elif command == '/pump_stop':
+            pump.pump_run_flag = 0
+            bot.sendMessage(chat_id, 'Period state is: ' + str(pump.pump_run_flag))
     except KeyboardInterrupt:
         print "Good bye handler"
 
@@ -107,18 +148,33 @@ temp_sensor.init_temperature_module()
 # init water level module
 water_level.init_module()
 
+pump = tg_pump.TgPump('main')
+
+#GPIO.wiringPiSetupGpio()
+# GPIO 26 (board pin 37)
+# Set Light pin:
+GPIO.pinMode(26, GPIO.GPIO.OUTPUT)
+GPIO.digitalWrite(26, GPIO.GPIO.LOW)
+# Set pump pin:
+GPIO.pinMode(21, GPIO.GPIO.OUTPUT)
+GPIO.digitalWrite(21, GPIO.GPIO.LOW)
+
 bot = telepot.Bot(BOT_TOKEN)
 bot.message_loop(handle)
 
 # Send start message to my ID
 
-bot.sendMessage(my_chat_id,'Hi, I am started! Temperature is: {:.1f} C'.format(temp_sensor.read_temperature(0)))
-
+# bot.sendMessage(my_chat_id,'Hi, I am started!')
+try:
+    bot.sendMessage(my_chat_id,'Hi, I am started! Temperature is: {:.1f} C'.format(temp_sensor.read_temperature(0)))
+except Exception:
+    print Exception
 try:
     while True:
         # print "Bot started..."
         call_hum_sensor(0)
-        time.sleep(4)
+        pump.pump_runtime()
+        time.sleep(1)
 # catch "Ctrl^C" signal
 except KeyboardInterrupt:
     print "Good bye"
