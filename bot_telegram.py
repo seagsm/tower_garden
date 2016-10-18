@@ -128,13 +128,13 @@ def handle(msg):
             except:
                 bot.sendMessage(chat_id, 'Something wrong!')
         elif command == '/param':
-            bot.sendMessage(chat_id, 'Period time is: ' + str(pump.pump_period_time)+ '\nDuty time is: ' + str(pump.pump_duty_time))
+            bot.sendMessage(chat_id, 'Period time is: ' + str(pump.pump_period_time) + '\nDuty time is: ' + str(pump.pump_duty_time) + '\nDelta time is: ' + str(pump.pump_time_delta) + '\nPump run state is: ' + str(pump.pump_run_flag))
         elif command == '/pump_start':
             pump.pump_run_flag = 1
-            bot.sendMessage(chat_id, 'Period state is: ' + str(pump.pump_run_flag))
+            bot.sendMessage(chat_id, 'Pump run state is: ' + str(pump.pump_run_flag))
         elif command == '/pump_stop':
             pump.pump_run_flag = 0
-            bot.sendMessage(chat_id, 'Period state is: ' + str(pump.pump_run_flag))
+            bot.sendMessage(chat_id, 'Pump run state is: ' + str(pump.pump_run_flag))
     except KeyboardInterrupt:
         print "Good bye handler"
 
