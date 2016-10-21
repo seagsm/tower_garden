@@ -17,6 +17,10 @@ humidity = 0
 hum_timestamp = 0
 hum_start_time = time.time()
 
+main_start_time = time.time()
+
+
+
 BOT_TOKEN = '254303577:AAFoYwuNJ4Txx6YnnRQO40dRaTbtx_RF4iQ'
 my_chat_id = 234288444
 # Tolik Pauk 256771010
@@ -101,7 +105,8 @@ def handle(msg):
         elif command == '/temp':
             bot.sendMessage(chat_id, 'temp: {:.1f} C'.format(temp_sensor.read_temperature(0)))
         elif command == '/level':
-            bot.sendMessage(chat_id, 'water_level is: {:.1f} %'.format(water_level.get_raw_distance_blocked()))
+           # bot.sendMessage(chat_id, 'water_level is: {:.1f} %'.format(water_level.get_raw_distance_blocked()))
+           bot.sendMessage(chat_id, 'water_level is`nt defined' )
         elif command == '/time':
             bot.sendMessage(chat_id,'time now: ' + str(datetime.datetime.now()))
         elif command == '/hum':
@@ -128,13 +133,38 @@ def handle(msg):
             except:
                 bot.sendMessage(chat_id, 'Something wrong!')
         elif command == '/param':
-            bot.sendMessage(chat_id, 'Period time is: ' + str(pump.pump_period_time) + '\nDuty time is: ' + str(pump.pump_duty_time) + '\nDelta time is: ' + str(pump.pump_time_delta) + '\nPump run state is: ' + str(pump.pump_run_flag))
+            working_time = time.time() - main_start_time
+            working_days = working_time//(60 * 60 * 24)
+            working_days_local = working_time/(60 * 60 * 24)
+            working_hours = ((working_days_local - working_days) * (60 * 60 * 24))//(60 * 60)
+            working_hours_local = ((working_days_local - working_days) * (60 * 60 * 24)) / (60 * 60)
+            working_minutes = (working_hours_local - working_hours)* 60
+
+            bot.sendMessage(chat_id, 'Start time is: ' + str(datetime.datetime.fromtimestamp(main_start_time)) +
+                            '\nCurrent time is: ' + str(datetime.datetime.date( datetime.datetime.today())) +
+                            '\nWorking days is: ' +  str(working_days) +
+                            '\nWorking hours is: ' + str(working_hours) +
+                            '\nWorking minutes is: {:.1f} '.format(working_minutes) +
+                            '\nCurrent temperature is: {:.1f} C'.format(temp_sensor.read_temperature(0)) +
+                            '\nPeriod time is: ' + str(pump.pump_period_time) +
+                            '\nDuty time is: ' + str(pump.pump_duty_time) +
+                            '\nPump inactive time is: {:.1f}sec'.format(pump.pump_time_delta) +
+                            '\nPump run state is: ' + str(pump.pump_run_flag)
+                            )
         elif command == '/pump_start':
-            pump.pump_run_flag = 1
-            bot.sendMessage(chat_id, 'Pump run state is: ' + str(pump.pump_run_flag))
+            if chat_id == my_chat_id:
+                pump.pump_run_flag = 1
+                bot.sendMessage(chat_id, 'Pump run state is: ' + str(pump.pump_run_flag))
+            else:
+                bot.sendMessage(chat_id, 'You have not right for this operation')
+
         elif command == '/pump_stop':
-            pump.pump_run_flag = 0
-            bot.sendMessage(chat_id, 'Pump run state is: ' + str(pump.pump_run_flag))
+            if chat_id == my_chat_id:
+                pump.pump_run_flag = 0
+                bot.sendMessage(chat_id, 'Pump run state is: ' + str(pump.pump_run_flag))
+            else:
+                bot.sendMessage(chat_id, 'You have not right for this operation')
+
     except KeyboardInterrupt:
         print "Good bye handler"
 
@@ -161,6 +191,20 @@ GPIO.digitalWrite(21, GPIO.GPIO.LOW)
 
 bot = telepot.Bot(BOT_TOKEN)
 bot.message_loop(handle)
+
+# Start check sequence:
+# Main light ON:
+GPIO.digitalWrite(26, GPIO.GPIO.HIGH)
+time.sleep(2)
+# Main light OFF:
+GPIO.digitalWrite(26, GPIO.GPIO.LOW)
+time.sleep(1)
+# Main pump ON:
+GPIO.digitalWrite(21, GPIO.GPIO.HIGH)
+time.sleep(10)
+# Main pump OFF:
+GPIO.digitalWrite(21, GPIO.GPIO.LOW)
+time.sleep(1)
 
 # Send start message to my ID
 
