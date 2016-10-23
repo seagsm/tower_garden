@@ -2,75 +2,92 @@
 # -*- coding: utf-8 -*-
 
 import time
-from modules import tg_temperature as temp_sensor
-from modules import tg_usonic_water_level as water_level
-from modules import tg_humidity as hum_sensor
-from modules import tg_pump
+#from modules import tg_new_temp_class as temp_class
+#from modules import tg_usonic_water_level as water_level
+#from modules import tg_humidity as hum_sensor
+#from modules import tg_pump_class
+import tg_new_temp_class as temp_class
+import tg_humidity_class as hum_class
+import tg_pump_class as pump_class
+import tg_light_class as light_class
+import tg_water_sensor_class as water_sensor_class
 
+import wiringpi as GPIO
 
 class TgDevice():
     current_device_name = ''
-    # list of temp sensor
-    places = {'inside': 0, 'outside': 1}
-    # list of result of temp sensor
-    temperature = {'inside': 0, 'outside': 0}
-    # list of result of hum sensor
-    # hum[0][place] - humidity
-    # hum[1][place] - temperature
-    humidity = [{'inside': 0, 'outside': 0},{'inside': 0, 'outside': 0}]
 
-    # Create list of pump
-    pump = {'main': 0, 'emergency': 0}
-    # On/Off pumps controller
-    pumps_run_flag  = 1
+    # Pump object:
+    pump = ''
+    # Temperature sensor object:
+    temp_sensor = ''
+    # Humidity sensor object:
+    hum_sensor = ''
+    # Water sensor object:
+    water_sensor = ''
+    # Lightt object:
+    main_light = ''
 
-    light_main = 0
-    light_night = 0
-
-    water_sensor_state = 0
-    water_level_sensor = 0
-#    water_level_min = 0
-#    water_level_max = 30
-#    water_level_percent = 0
-#    water_level_raw = 0
-    pir_sensor_state = 0
-
-    last_call_time_stamp = 0
-
-    def __init__(self, name):
+    def __init__(self, name, pump_name,pump_gpio, pump_period, pump_duty, temperature_sensor_id, hum_name,hum_type, hum_gpio,
+                       water_sensor_name, water_sensor_gpio,
+                       main_light_name, main_light_gpio):
         self.current_device_name = name
         self.last_call_time_stamp = time.time()
         # Create pumps objects:
-        self.pump['main'] = tg_pump.TgPump('main')
-        self.pump['emergency'] = tg_pump.TgPump('emergency')
-        # Init pumps parameters:
-        self.pump['main'].init_pump(10, 2)
-        self.pump['emergency'].init_pump(10, 2)
-        # Create water_level_sensor object:
-        self.water_level_sensor = water_level.TgWaterLevelSensor('main_water_tank')
+        self.pump = pump_class.TgPump(pump_name, pump_gpio)
+        # Set pump period and duty:
+        self.pump.set_pump_parameters(pump_period,pump_duty)
+        # Create temperature sensor object ('28-0316802e8cff'):
+        self.temp_sensor = temp_class.TempSensor(temperature_sensor_id)
+        # Create humidity sensor object:
+        self.hum_sensor = hum_class.TgHumidity(hum_name, hum_type, hum_gpio)
+        # Create water sensor object:
+        self.water_sensor = water_sensor_class.TgWaterSensor(water_sensor_name, water_sensor_gpio)
+        # Create light object:
+        self.main_light = light_class.TgLight(main_light_name, main_light_gpio)
+
 
     # Get temperature:
-    def get_temperature(self, place):
-        self.temperature[place] = temp_sensor.read_temperature(self.places[place])
-        return self.temperature[place]
+    def get_temperature(self):
+        return self.temp_sensor.read_temperature()
 
     # Get humidity and temperature:
-    def get_humidity(self, place):
-        self.humidity[0][place],self.humidity[1][place] = hum_sensor.get_humidity_from_sensor(self.places[place])
+    def get_humidity(self):
+        return self.hum_sensor.get_humidity()
 
-    def get_water_level(self):
-        water_level.get_raw_distance_blocked(self.water_level_sensor)
-        if self.water_level_sensor.water_level_raw >= 0:
-            # calc value in percents:
-            percent = (self.water_level_sensor.water_level_max - self.water_level_sensor.water_level_min)/100.0
-            self.water_level_sensor.water_level_percent = self.water_level_sensor.water_level_raw/percent
+    def get_water_state(self):
+        return self.water_sensor.get_sensor_state()
+
+
+
+def main():
+    # Init GPIO subsystem:
+    GPIO.wiringPiSetupGpio()
+    my_device = TgDevice('MyTestDevice','main', 21,30, 15,'28-0316802e8cff','MyTestHumSensor', 11, 22,'TankWaterSensor',20,'MainLight',26)
+    while True:
+        my_device.pump.pump_runtime()
+        temperature = my_device.get_temperature()
+        hum, temp = my_device.get_humidity()
+        water_state = my_device.get_water_state()
+
+        print("Temperature is %f C degree" % temperature)
+        print("Humidity is %f percent" % hum)
+        print("Temperature is %f C degree" % temp)
+        print("Water state is %i " % water_state)
+
+        if my_device.main_light.get_light_state():
+            my_device.main_light.set_light_state(0)
         else:
-            # return error value:
-            self.water_level_percent = -300
-        return self.water_level_percent
+            my_device.main_light.set_light_state(1)
+        print("Light state is %i " % my_device.main_light.get_light_state())
 
-    def pump_controller(self, pump_obj):
-        if self.pumps_run_flag == 1:
-            pump_obj.pump_runtime()
+        time.sleep(4)
+
+
+
+
+if __name__ == "__main__":
+    main()
+
 
 

@@ -30,7 +30,6 @@ def call_hum_sensor(sensor_num):
     global temperature
     global humidity
     global hum_timestamp
-    global hum_timestamp
     global hum_start_time
 
     hum_timestamp = time.time() - hum_start_time
@@ -178,7 +177,7 @@ temp_sensor.init_temperature_module()
 # init water level module
 water_level.init_module()
 
-pump = tg_pump.TgPump('main')
+pump = tg_pump.TgPump('main', 21)
 
 #GPIO.wiringPiSetupGpio()
 # GPIO 26 (board pin 37)

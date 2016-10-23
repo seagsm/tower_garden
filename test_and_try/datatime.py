@@ -32,3 +32,12 @@ print working_days
 print working_hours_local
 print working_hours
 print working_minutes
+
+now_time = datetime.datetime.now()
+cur_hour = now_time.hour
+
+if 7 <= cur_hour <= 22 :
+    print "Light ON"
+else:
+    print "Light OFF"
+print ('Current hour '+str(cur_hour))
